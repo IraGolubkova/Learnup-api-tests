@@ -33,7 +33,7 @@ public class PartialUpdateBookingTests {
                 .statusCode(200)
                 .body("id", is(CoreMatchers.not(nullValue())))
                 .when()  //шаг
-                .patch("https://restful-booker.herokuapp.com/booking/+id")
+                .patch("https://restful-booker.herokuapp.com/booking/id")
                 .prettyPeek()
                 .then()//проверки
                 .statusCode(200);
