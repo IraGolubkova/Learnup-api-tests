@@ -12,9 +12,10 @@ import static org.hamcrest.Matchers.nullValue;
 public class DeleteBookingIdTests {
     static String token;
     String id;
+
     @BeforeAll
     static void beforeAll() {
-         token = given() //предусловия, подготовка
+        token = given() //предусловия, подготовка
                 .log()
                 .all()
                 .header("Content-Type", "application/json")
@@ -42,9 +43,9 @@ public class DeleteBookingIdTests {
                 .all()
                 .header("Content-Type", "application/json")
                 .body("{\n"
-                        + "    \"firstname\" : \"Jim\",\n"
-                        + "    \"lastname\" : \"Brown\",\n"
-                        + "    \"totalprice\" : 111,\n"
+                        + "    \"firstname\" : \"Marat\",\n"
+                        + "    \"lastname\" : \"Ivanov\",\n"
+                        + "    \"totalprice\" : 555,\n"
                         + "    \"depositpaid\" : true,\n"
                         + "    \"bookingdates\" : {\n"
                         + "        \"checkin\" : \"2018-01-01\",\n"
@@ -68,14 +69,39 @@ public class DeleteBookingIdTests {
         given()
                 .log()
                 .all()
-                .header("Cookie", "token="+token)
+                .header("Cookie", "token=" + token)
                 .when()
-                .delete("https://restful-booker.herokuapp.com/booking/"+id)
+                .delete("https://restful-booker.herokuapp.com/booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(201);
 
 
+    }
+
+    @Test
+    void deleteBookingWithoutAuthNegativeTest() {
+        given()
+                .log()
+                .all()
+                .when()
+                .delete("https://restful-booker.herokuapp.com/booking/" + id)
+                .prettyPeek()
+                .then()
+                .statusCode(403);
+
+    }
+
+    @Test
+    void deletingABookingWithAuthorizationPositiveTest() {
+        given()
+                .log()
+                .all()
+                .header("Authorization", "Basic YWRtaW46cGFzc3dvcmQxMjM=")
+                .when()
+                .delete("https://restful-booker.herokuapp.com/booking/" + id)
+                .prettyPeek()
+                .then().statusCode(201);
     }
 }
 
