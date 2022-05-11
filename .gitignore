@@ -2,3 +2,4 @@
 target/
 fcul.bat
 .allure
+.allure\allure-2.14.0
