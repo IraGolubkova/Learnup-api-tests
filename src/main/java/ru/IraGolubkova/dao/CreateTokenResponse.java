@@ -3,14 +3,13 @@ package ru.IraGolubkova.dao;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+@Getter
 public class CreateTokenResponse {
 
-    @Getter
     @JsonProperty("token")
-    private final String token;
+    private String token;
+    @JsonProperty("reason")
+    private String reason;
 
-    public CreateTokenResponse(String token) {
-        this.token = token;
-    }
 }
 

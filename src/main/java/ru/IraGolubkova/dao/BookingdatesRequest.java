@@ -1,24 +1,27 @@
 package ru.IraGolubkova.dao;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Builder;
+import lombok.With;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder
+@With
+@JsonPropertyOrder({
+        "checkin",
+        "checkout"
+})
 public class BookingdatesRequest {
 
-    public static BookingdatesRequest builder() {
-        return null;
-    }
-
-    public Object withCheckin() {
-        return null;
-    }
-
-    public Object withCheckout() {
-        return null;
-    }
-
-    public Object checkin(String format) {
-        return null;
-    }
+    @JsonProperty("checkin")
+    private String checkin;
+    @JsonProperty("checkout")
+    private String checkout;
 
 }
+
 
 
 

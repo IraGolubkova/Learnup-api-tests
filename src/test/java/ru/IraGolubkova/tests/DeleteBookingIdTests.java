@@ -1,62 +1,97 @@
 package ru.IraGolubkova.tests;
 
-import org.hamcrest.CoreMatchers;
+import com.github.javafaker.Faker;
+import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.IraGolubkova.dao.BookingdatesRequest;
+import ru.IraGolubkova.dao.CreateAccountRequest;
+import ru.IraGolubkova.dao.CreateTokenRequest;
+import ru.IraGolubkova.dao.CreateTokenResponse;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 
 public class DeleteBookingIdTests {
-    static String token;
-    String id;
+    protected static final String PROPERTIES_FILE_PATH = "src/test/resources/application.properties";
+    protected static CreateTokenRequest requestToken;
+    protected static CreateTokenResponse responseToken;
+    protected static BookingdatesRequest requestBookingDates;
+    protected static CreateAccountRequest requestBooking;
+    protected static Properties properties = new Properties();
+    protected static Faker faker = new Faker();
+    protected String id = given()
+            .log()
+            .all()
+            .header("Content-Type", "application/json")
+            .body(requestBooking)
+            .expect()
+            .statusCode(200)
+            .when()
+            .post("booking")
+            .prettyPeek()
+            .body()
+            .jsonPath()
+            .get("bookingid")
+            .toString();
+
 
     @BeforeAll
-    static void beforeAll() {
-        token = given() //предусловия, подготовка
+    static void beforeAll() throws IOException {
+        properties.load(new FileInputStream(PROPERTIES_FILE_PATH));
+        RestAssured.baseURI = properties.getProperty("base.url");
+        requestToken = CreateTokenRequest.builder()
+                .username(properties.getProperty("username"))
+                .password(properties.getProperty("password"))
+                .build();
+
+        responseToken = given()
                 .log()
                 .all()
                 .header("Content-Type", "application/json")
-                .body("{\n"
-                        + "    \"username\" : \"admin\",\n"
-                        + "    \"password\" : \"password123\"\n"
-                        + "}")
+                .body(requestToken)
                 .expect()
                 .statusCode(200)
-                .body("token", is(CoreMatchers.not(nullValue())))
-                .when()  //шаг
-                .post("https://restful-booker.herokuapp.com/auth")//шаг(и)
+                .when()
+                .post("auth")
                 .prettyPeek()
-                .body()
-                .jsonPath()
-                .get("token")
-                .toString();
+                .then()
+                .extract()
+                .as(CreateTokenResponse.class);
+        assertThat(responseToken.getToken().length(), equalTo(15));
+
+        requestBookingDates = BookingdatesRequest.builder()
+                .checkin(properties.getProperty("checkin"))
+                .checkout(properties.getProperty("checkout"))
+                .build();
+
+        requestBooking = CreateAccountRequest.builder()
+                .firstname(faker.name().firstName())
+                .lastname(faker.name().lastName())
+                .totalprice(faker.hashCode())
+                .depositpaid(faker.bool().bool())
+                .bookingDates(requestBookingDates)
+                .additionalneeds(faker.chuckNorris().fact())
+                .build();
     }
 
     @BeforeEach
     void setUp() {
-        //создает бронирование
         id = given()
                 .log()
                 .all()
                 .header("Content-Type", "application/json")
-                .body("{\n"
-                        + "    \"firstname\" : \"Marat\",\n"
-                        + "    \"lastname\" : \"Ivanov\",\n"
-                        + "    \"totalprice\" : 555,\n"
-                        + "    \"depositpaid\" : true,\n"
-                        + "    \"bookingdates\" : {\n"
-                        + "        \"checkin\" : \"2018-01-01\",\n"
-                        + "        \"checkout\" : \"2019-01-01\"\n"
-                        + "    },\n"
-                        + "    \"additionalneeds\" : \"Breakfast\"\n"
-                        + "}")
+                .body(requestBooking)
                 .expect()
                 .statusCode(200)
                 .when()
-                .post("https://restful-booker.herokuapp.com/booking")
+                .post("booking")
                 .prettyPeek()
                 .body()
                 .jsonPath()
@@ -64,14 +99,15 @@ public class DeleteBookingIdTests {
                 .toString();
     }
 
+
     @Test
     void deleteBookingPositiveTest() {
         given()
                 .log()
                 .all()
-                .header("Cookie", "token=" + token)
+                .header("Cookie", "token=" + responseToken.getToken())
                 .when()
-                .delete("https://restful-booker.herokuapp.com/booking/" + id)
+                .delete("/booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(201);
@@ -85,7 +121,7 @@ public class DeleteBookingIdTests {
                 .log()
                 .all()
                 .when()
-                .delete("https://restful-booker.herokuapp.com/booking/" + id)
+                .delete("/booking/" + id)
                 .prettyPeek()
                 .then()
                 .statusCode(403);
@@ -99,10 +135,11 @@ public class DeleteBookingIdTests {
                 .all()
                 .header("Authorization", "Basic YWRtaW46cGFzc3dvcmQxMjM=")
                 .when()
-                .delete("https://restful-booker.herokuapp.com/booking/" + id)
+                .delete("/booking/" + id)
                 .prettyPeek()
                 .then().statusCode(201);
     }
 }
+
 
 
